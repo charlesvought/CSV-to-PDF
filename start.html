@@ -1,0 +1,107 @@
+<html>
+
+<head></head>
+
+<body>
+    <!-- Text input fields -->
+    <input id="name" type="text" placeholder="Your Name">
+    <br />
+    <input id="email" type="email" placeholder="Your Email Address">
+    <br />
+    <input id="gdrive" type="text" placeholder="https://docs.google.com/document/d/...">
+    <br />
+    <!-- File upload button -->
+    <input id="file" type="file">
+    <!-- Form submit button -->
+    <button type="submit" onclick="submitForm(); return false;">Upload CSV File</button>
+    <!-- Show Progress -->
+    <p id="error" style="color:red"></p>
+    <p id="progress" style="color:blue"></p>
+    <p id="success" style="display: none;color:green">Processing Successful!</p>
+    <p id="download" style="display: none"></p>
+
+</body>
+<!-- Add the jQuery library -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script>
+    var file,
+        reader = new FileReader();
+
+    reader.onloadend = function(e) {
+
+        if (e.target.error != null) {
+            showError("File " + file.name + " could not be read.");
+            return;
+        } else {
+            showProgress("Processing File: Please Stand By....DO NOT CLOSE BROWSER");
+            google.script.run
+                .withSuccessHandler(showSuccess)
+                .uploadFileToGoogleDrive(e.target.result, file.name, $('input#name').val().trim(), $('input#email').val().trim(), $('input#gdrive').val().trim());
+        }
+    };
+
+    function showSuccess(e) {
+        if (e[0] === "OK") {
+            $('#progress').hide();
+            $('#success').show();
+            $('#download').show().html("Download URL = " + '<a href=' + e[1] + '>Zip File</a>);
+        } else {
+            $('#progress').hide();
+            showError(e);
+        }
+    }
+
+    function submitForm() {
+        //reset Indicators
+        $('#progress').hide();
+        $('#success').hide();
+        $('#download').hide();
+        $('#error').hide();
+
+        var email = $('#email').val().trim();
+        var name = $('#name').val().trim();
+        var gdrive = $('#gdrive').val().trim();
+        var files = $('#file')[0].files;
+
+        if (files.length === 0) {
+            showError("Please select a file to upload");
+            return;
+        }
+
+        if (email.length === 0) {
+            showError("Please enter an email address");
+            return;
+        }
+
+        if (name.length === 0) {
+            showError("Please enter a name");
+            return;
+        }
+
+        if (gdrive.trim().length < 35) {
+            showError("Please enter a valid public Google Docs URL");
+            return;
+        }
+
+        file = files[0];
+
+        if (file.size > 1024 * 1024 * 10) {
+            showError("The file size should be less than 10 MB in size. Please choose a smaller file.");
+            return;
+        }
+
+        showProgress("Uploading file...");
+
+        reader.readAsDataURL(file);
+    }
+
+    function showError(e) {
+        $('#error').show().html("ERROR: " + e);
+    }
+
+    function showProgress(e) {
+        $('#progress').show().html(e);
+    }
+</script>
+
+</html>
