@@ -44,7 +44,7 @@
         if (e[0] === "OK") {
             $('#progress').hide();
             $('#success').show();
-            $('#download').show().html("Download URL = " + '<a href=' + e[1] + '>Zip File</a>);
+            $('#download').show().html("Download URL = " + "<a href=" + e[1] + ">Zip File</a>");
         } else {
             $('#progress').hide();
             showError(e);
