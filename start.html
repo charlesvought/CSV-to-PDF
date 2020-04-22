@@ -1,107 +1,190 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 
-<head></head>
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" />
+
+  <title>CSV -> PDF for Google Docs</title>
+</head>
 
 <body>
-    <!-- Text input fields -->
-    <input id="name" type="text" placeholder="Your Name">
-    <br />
-    <input id="email" type="email" placeholder="Your Email Address">
-    <br />
-    <input id="gdrive" type="text" placeholder="https://docs.google.com/document/d/...">
-    <br />
-    <!-- File upload button -->
-    <input id="file" type="file">
-    <!-- Form submit button -->
-    <button type="submit" onclick="submitForm(); return false;">Upload CSV File</button>
-    <!-- Show Progress -->
-    <p id="error" style="color:red"></p>
-    <p id="progress" style="color:blue"></p>
-    <p id="success" style="display: none;color:green">Processing Successful!</p>
-    <p id="download" style="display: none"></p>
+  <nav class="navbar navbar-expand-lg navbar navbar-dark bg-primary text-white">
+    <a class="navbar-brand"
+      href="https://script.google.com/macros/s/AKfycbzyMM_lxBN0yNx3YmFB5iOWIJHnpG3BET70r-Ik8oPDwUAJM5k9/exec"
+      target="_blank" rel="noopener noreferrer">CSV -> PDF</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown"
+      aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNavDropdown">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/charlesvought/CSV-to-PDF" target="_blank"
+            rel="noopener noreferrer">Source</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/charlesvought/CSV-to-PDF/blob/master/README.md" target="_blank"
+            rel="noopener noreferrer">Documentation</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="http://charlesvought.com" target="_blank" rel="noopener noreferrer">About.me</a>
+        </li>
 
-</body>
-<!-- Add the jQuery library -->
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-<script>
+        <!--   
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Dropdown link
+        </a>
+        <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+          <a class="dropdown-item" href="#">Action</a>
+          <a class="dropdown-item" href="#">Another action</a>
+          <a class="dropdown-item" href="#">Something else here</a>
+        </div>
+      </li>   -->
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Alerts -->
+  <!-- ERROR Alert -->
+  <div class="alert alert-danger alert-dismissible fade show" id="error" style="display: none;">
+    <button type="button" class="close" data-dismiss="alert">&times;</button>
+  </div>
+  <!-- PROGRESS Alert -->
+  <div class="alert alert-info alert-dismissible fade show" id="progress" style="display: none;">
+    <button type="button" class="close" data-dismiss="alert">&times;</button>
+  </div>
+  <!-- SUCCESS Alert -->
+  <div class="alert alert-success alert-dismissible fade show" id="success" style="display: none;">
+    <button type="button" class="close" data-dismiss="alert">&times;</button>
+  </div>
+
+  <!-- Default form subscription -->
+  <form class="text-center border border-light p-5" action="#!">
+    <p class="h4 mb-4">CSV -> PDF for Google Docs</p>
+
+    <p>Brief description of the service</p>
+    <!-- 
+    <p>
+        <a href="" target="_blank">See the last newsletter</a>
+    </p>
+-->
+    <!-- Name -->
+    <input type="text" id="name" class="form-control mb-4" placeholder="Enter Name" />
+
+    <!-- Email -->
+    <input type="email" id="email" class="form-control mb-4" placeholder="Enter E-mail" />
+
+    <!-- Link to Google Doc Source -->
+    <input type="text" id="gdrive" class="form-control mb-4" placeholder="https://docs.google.com/document/d/..." />
+
+    <!-- File Upload -->
+    <label for="file">Upload companion data file (File format: CSV)</label>
+    <input type="file" class="form-control-file" id="file" />
+    <br />
+    <!-- Sign in button -->
+    <button class="btn btn-info btn-block" type="submit" onclick="submitForm(); return false;">
+      Submit
+    </button>
+  </form>
+
+  <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+  <script>
     var file,
-        reader = new FileReader();
+      reader = new FileReader();
 
-    reader.onloadend = function(e) {
-
-        if (e.target.error != null) {
-            showError("File " + file.name + " could not be read.");
-            return;
-        } else {
-            showProgress("Processing File: Please Stand By....DO NOT CLOSE BROWSER");
-            google.script.run
-                .withSuccessHandler(showSuccess)
-                .uploadFileToGoogleDrive(e.target.result, file.name, $('input#name').val().trim(), $('input#email').val().trim(), $('input#gdrive').val().trim());
-        }
+    reader.onloadend = function (e) {
+      if (e.target.error != null) {
+        showError("File " + file.name + " could not be read.");
+        return;
+      } else {
+        showProgress(
+          "Processing File: Please Stand By....DO NOT CLOSE BROWSER"
+        );
+        google.script.run
+          .withSuccessHandler(showSuccess)
+          .uploadFileToGoogleDrive(
+            e.target.result,
+            file.name,
+            $("input#name").val().trim(),
+            $("input#email").val().trim(),
+            $("input#gdrive").val().trim()
+          );
+      }
     };
 
     function showSuccess(e) {
-        if (e[0] === "OK") {
-            $('#progress').hide();
-            $('#success').show();
-            $('#download').show().html("Download URL = " + "<a href=" + e[1] + ">Zip File</a>");
-        } else {
-            $('#progress').hide();
-            showError(e);
-        }
+      if (e[0] === "OK") {
+        $("#progress").hide();
+        $("#success")
+          .show()
+          .html("<strong>Success! Download Link:</strong>  " + "<a href=" + e[1] + "><u>Zip File</u></a>" +" Session ID:  " + e[2]);
+      } else {
+        $("#progress").hide();
+        showError(e);
+      }
     }
 
     function submitForm() {
-        //reset Indicators
-        $('#progress').hide();
-        $('#success').hide();
-        $('#download').hide();
-        $('#error').hide();
+      //reset Indicators
+      $("#progress").hide();
+      $("#success").hide();
+      $("#download").hide();
+      $("#error").hide();
 
-        var email = $('#email').val().trim();
-        var name = $('#name').val().trim();
-        var gdrive = $('#gdrive').val().trim();
-        var files = $('#file')[0].files;
+      var email = $("#email").val().trim();
+      var name = $("#name").val().trim();
+      var gdrive = $("#gdrive").val().trim();
+      var files = $("#file")[0].files;
 
-        if (files.length === 0) {
-            showError("Please select a file to upload");
-            return;
-        }
+      if (files.length === 0) {
+        showError("Please select a file to upload");
+        return;
+      }
 
-        if (email.length === 0) {
-            showError("Please enter an email address");
-            return;
-        }
+      if (email.length === 0) {
+        showError("Please enter an email address");
+        return;
+      }
 
-        if (name.length === 0) {
-            showError("Please enter a name");
-            return;
-        }
+      if (name.length === 0) {
+        showError("Please enter a name");
+        return;
+      }
 
-        if (gdrive.trim().length < 35) {
-            showError("Please enter a valid public Google Docs URL");
-            return;
-        }
+      if (gdrive.trim().length < 35) {
+        showError("Please enter a valid public Google Docs URL");
+        return;
+      }
 
-        file = files[0];
+      file = files[0];
 
-        if (file.size > 1024 * 1024 * 10) {
-            showError("The file size should be less than 10 MB in size. Please choose a smaller file.");
-            return;
-        }
+      if (file.size > 1024 * 1024 * 10) {
+        showError("The file size should be less than 10 MB in size. Please choose a smaller file.");
+        return;
+      }
 
-        showProgress("Uploading file...");
+      showProgress("Uploading file...");
 
-        reader.readAsDataURL(file);
+      reader.readAsDataURL(file);
     }
 
     function showError(e) {
-        $('#error').show().html("ERROR: " + e);
+      $("#error").show().html("ERROR: " + e);
     }
 
     function showProgress(e) {
-        $('#progress').show().html(e);
+      $("#progress").show().html(e);
     }
-</script>
+  </script>
+</body>
 
 </html>

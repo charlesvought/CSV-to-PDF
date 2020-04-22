@@ -5,7 +5,6 @@ function doGet(e) {
 }
 
 
-
 function uploadFileToGoogleDrive(data, file, name, email, gDriveUrl) {
     var csvTempFolderID = '1wFPsTesbQXKUUw8X6RlTibuPq7ahpjX_';
     var sessionID = Utilities.getUuid();
@@ -15,21 +14,21 @@ function uploadFileToGoogleDrive(data, file, name, email, gDriveUrl) {
         var emailRegex = /[a-zA-Z0-9_\.\+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-\.]+/;
         if (emailRegex.test(email) == false) {
             writeLog("Name:" + name + " Email:" + email + " SessionID:" + sessionID + " Failure: Invalid Email Address Entered");
-            return "Invalid Email Address Entered; Session ID:" + sessionID;
+            return "Invalid Email Address Entered;          Session ID:" + sessionID;
         }
 
         //evaluate GDRIVE link
         var gDriveUrlRegex = /^https:\/\/docs.google.com\/document\/d\/[\S]{0,}/;
         if (gDriveUrlRegex.test(gDriveUrl) == false) {
             writeLog("Name:" + name + " Email:" + email + " SessionID:" + sessionID + " Failure: Invalid Google Docs URL Provided");
-            return "Invalid Google Docs URL Provided; SessionID:" + sessionID;
+            return "Invalid Google Docs URL Provided;          SessionID:" + sessionID;
         } else {
             var docIDRegex = /\/d\/(.+)\//;
             var matchDocID = gDriveUrl.match(docIDRegex);
             var docID = matchDocID[1];
             if (docID == null || undefined) {
                 writeLog("Name:" + name + " Email:" + email + " SessionID:" + sessionID + " Failure: Google Doc ID Could Not Be Extracted from URL");
-                return "Google Doc ID Could Not Be Extracted from URL; SessionID:" + sessionID;
+                return "Google Doc ID Could Not Be Extracted from URL;          SessionID:" + sessionID;
             }
             //evaluate GDRIVE File Permissions
             try {
@@ -62,7 +61,7 @@ function uploadFileToGoogleDrive(data, file, name, email, gDriveUrl) {
         //evaluate MIME type
         var fileFormat = tempFile.getMimeType();
         if (fileFormat !== 'text/csv') {
-          return "Invalid File Mime Type = " + fileFormat + "; SessionID:" + sessionID;
+          return "Invalid File Mime Type = " + fileFormat + "          SessionID:" + sessionID;
         }
         
         //Copy User Source Doc Into Session Folder
@@ -85,7 +84,7 @@ function uploadFileToGoogleDrive(data, file, name, email, gDriveUrl) {
         var zipFileID = tempFolder.createFile(Utilities.zip(blobArray, sessionID + '.zip')).getId();
       
       
-        return ["OK", DriveApp.getFileById(zipFileID).setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW).getDownloadUrl()];
+        return ["OK", DriveApp.getFileById(zipFileID).setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW).getDownloadUrl(), sessionID];
 
     } catch (f) {
         writeLog(f.toString());
