@@ -66,7 +66,9 @@
     <form class="text-center border border-light p-5" action="#!">
       <p class="h4 mb-4">CSV -> PDF for Google Docs</p>
 
-      <p>Brief description of the service</p>
+      <p>Merge a Google Doc with a data source to produce PDFs</p>
+      <p>Processing time is approximately 400 pdfs/hr.</p>
+      
       <!-- 
     <p>
         <a href="" target="_top">See the last newsletter</a>
@@ -183,9 +185,7 @@
       }
 
       function showError(e) {
-        $("#error")
-          .show()
-          .html("ERROR: " + e);
+        $("#error").show().html("ERROR: " + e);
       }
 
       function showProgress(e) {

@@ -68,12 +68,7 @@ function uploadFileToGoogleDrive(data, file, name, email, gDriveUrl) {
       Drive.Files.copy({ mimeType: MimeType.GOOGLE_SHEETS, convert: true, parents: [{ id: tempFolderID }] }, tempFileID);
       var sheets = SpreadsheetApp.openById(DriveApp.getFolderById(tempFolderID).getFilesByType(MimeType.GOOGLE_SHEETS).next().getId()).getSheets();
       var csv = sheets.map(function (sheet) {
-        return sheets[0]
-          .getDataRange()
-          .getValues()
-          .reduce(function (csv, row) {
-            return (csv += row.join(",") + "\n");
-          }, "");
+        return sheets[0].getDataRange().getValues().reduce(function (csv, row) {return (csv += row.join(",") + "\n");}, "");
       });
       DriveApp.getFolderById(tempFolderID).createFile(tempFile.getName() + ".csv", csv, MimeType.CSV);
       tempFileID = DriveApp.getFolderById(tempFolderID).getFilesByType(MimeType.CSV).next().getId();
@@ -90,8 +85,12 @@ function uploadFileToGoogleDrive(data, file, name, email, gDriveUrl) {
 
     //wrap up the resulting PDFs into Zip File and serve download link
     var zipFileID = zipPDF(tempFolderID, sessionID);
+    var ZipDownloadUrl = DriveApp.getFileById(zipFileID).setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW).getDownloadUrl();
 
-    return ["OK", DriveApp.getFileById(zipFileID).setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW).getDownloadUrl(), sessionID];
+    //Email Download Link
+    //MailApp.sendEmail(email, "CSV->PDF Download Link (SessionID: " + sessionID + ")", "Download Link: \r\n" + ZipDownloadUrl + "\r\n\r\n SessionID: " + sessionID);
+    
+    return ["OK", ZipDownloadUrl, sessionID];
   } catch (f) {
     writeLog(f.toString());
     return f.toString();
@@ -123,9 +122,7 @@ function zipPDF(folderID, sessionID) {
     var tempFolderPDFsfile = tempFolderPDFs.next();
     blobArray.push(tempFolderPDFsfile);
   }
-  return DriveApp.getFolderById(folderID)
-    .createFile(Utilities.zip(blobArray, sessionID + ".zip"))
-    .getId();
+  return DriveApp.getFolderById(folderID).createFile(Utilities.zip(blobArray, sessionID + ".zip")).getId();
 }
 
 var logSheet = SpreadsheetApp.openById("1dJI7PrQYcYAstLcy6AOZ9KhdrHF3LQaoNWCrdKfcjJA").getSheetByName("Log"); //output Console Log
