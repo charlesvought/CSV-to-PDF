@@ -10,7 +10,7 @@ URL Forward from: [charlesvought.com/csvpdf](charlesvought.com/csvpdf)
 
 ## Step 1: Create Google Doc and map the fields corresponding to column numbers in the data source.
 
-> ![](https://i.imgur.com/DyvGdoA.jpg)
+> ![](https://i.imgur.com/LTpQXKD.jpg)
 
 
 ## Step 2: Adjust Share setting on Google Doc to make it available for download by the application.
