@@ -23,9 +23,10 @@ function recordInjector(record, r, fileID, sessionID, tempFolder) {
     var template = DocumentApp.openById(newDocument);
     for (var i = 0, s = 1; i < record.length; i++, s++) {
       try {
-        template.getBody().replaceText("{0" + s.toString() + "}", record[i]);
-        template.getHeader().replaceText("{0" + s.toString() + "}", record[i]);
-        template.getFooter().replaceText("{0" + s.toString() + "}", record[i]);
+        template.getBody().replaceText("{" + s.toString() + "\d*}", record[i]);
+        template.getHeader().replaceText("{" + s.toString() + "\d*}", record[i]);
+        template.getFooter().replaceText("{" + s.toString() + "\d*}", record[i]);
+        writeLog("{" + s.toString() + "}");
       } catch (e) {
         writeLog("Record Injection Error1: " + e + " SessionID:" + sessionID);
       }
