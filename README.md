@@ -31,3 +31,5 @@ URL Forward from: [charlesvought.com/csvpdf](charlesvought.com/csvpdf)
 
 > ![](https://i.imgur.com/bC2yiBY.jpg)
 
+## Notes:
+The name of the source document must be present in column 1 of the data.
