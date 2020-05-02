@@ -13,7 +13,7 @@
 
   <body>
     <nav class="navbar navbar-expand-lg navbar navbar-dark bg-primary text-white">
-      <a class="navbar-brand">CSV -> PDF</a>
+      <a class="navbar-brand">Google Doc -> PDF</a>
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -47,7 +47,7 @@
     <!-- Alerts -->
     <!-- PROGRESS Bar -->
     <div class="progress">
-      <div class="progress-bar progress-bar-striped bg-success progress-bar-animated" role="progressbar" id="progressBar" style="width: 100%; display: none;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">PROCESSING FILE</div>
+      <div class="progress-bar progress-bar-striped bg-success progress-bar-animated" role="progressbar" id="progressBar" style="width: 100%; display: none;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
     </div>
     <!-- PROGRESS Message -->
     <div class="alert alert-info alert-dismissible fade show" id="progress" style="display: none;">
@@ -64,28 +64,55 @@
 
     <!-- Default form subscription -->
     <form class="text-center border border-light p-5" action="#!">
-      <p class="h4 mb-4">CSV -> PDF for Google Docs</p>
-
+      <p class="h4 mb-4">PDF Merge for Google Docs</p>
       <p>Merge a Google Doc with a data source to produce PDFs</p>
       <p>Processing time is approximately 400 pdfs/hr.</p>
-      
+
       <!-- 
     <p>
         <a href="" target="_top">See the last newsletter</a>
     </p>
 -->
       <!-- Name -->
-      <input type="text" id="name" class="form-control mb-4" placeholder="Enter Name" />
-
+      <div class="input-group mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="inputGroup-sizing-default">Name</span>
+        </div>
+        <input type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-default" id="name" />
+      </div>
       <!-- Email -->
-      <input type="email" id="email" class="form-control mb-4" placeholder="Enter E-mail" />
+      <div class="input-group mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="inputGroup-sizing-default">Email Address</span>
+        </div>
+        <input type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-default" id="email" />
+      </div>
 
       <!-- Link to Google Doc Source -->
-      <input type="text" id="gdrive" class="form-control mb-4" placeholder="https://docs.google.com/document/d/..." />
-
+      <div class="input-group mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="inputGroup-sizing-default">Google Docs URL</span>
+        </div>
+        <input type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-default" id="gdrive" placeholder="https://docs.google.com/document/d/..." />
+      </div>
       <!-- File Upload -->
       <label for="file">Upload companion data file (File format: CSV or Microsoft Excel)</label>
-      <input type="file" class="form-control-file" id="file" />
+
+      <div class="input-group mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="inputGroupFileAddon01">Upload Data Source</span>
+        </div>
+        <div class="custom-file">
+          <input type="file" class="custom-file-input" id="file" aria-describedby="inputGroupFileAddon01" />
+          <label class="custom-file-label" for="file">Choose file</label>
+        </div>
+      </div>
+
+      <div class="custom-control custom-switch" style="text-align: left;">
+        <input type="checkbox" class="custom-control-input" id="dataHeaders" />
+        <label class="custom-control-label" for="dataHeaders">Data uses headers</label>
+      </div>
+
       <br />
       <!-- Sign in button -->
       <button class="btn btn-info btn-block" type="submit" id="submitButton" onclick="submitForm(); return false;">Submit</button>
@@ -104,14 +131,15 @@
           showError("File " + file.name + " could not be read.");
           return;
         } else {
-          $("#progressBar").show();
-          $('#name').prop('readonly', true);
-          $('#email').prop('readonly', true);
-          $('#gdrive').prop('readonly', true);
-          $('#file').prop('disabled', true);
-          $('#submitButton').prop('disabled', true);
+          progressBarUpdate("100%", "PROCESSING FILE");
+          $("#name").prop("readonly", true);
+          $("#email").prop("readonly", true);
+          $("#gdrive").prop("readonly", true);
+          $("#file").prop("disabled", true);
+          $("#dataHeaders").prop("disabled", true);
+          $("#submitButton").prop("disabled", true);
           showProgress("Please Stand By....DO NOT CLOSE BROWSER");
-          google.script.run.withSuccessHandler(showSuccess).uploadFileToGoogleDrive(e.target.result, file.name, $("input#name").val().trim(), $("input#email").val().trim(), $("input#gdrive").val().trim());
+          google.script.run.withSuccessHandler(showSuccess).uploadFileToGoogleDrive(e.target.result, file.name, $("input#name").val().trim(), $("input#email").val().trim(), $("input#gdrive").val().trim(), $("#dataHeaders").prop("checked"));
         }
       };
 
@@ -119,23 +147,25 @@
         if (e[0] === "OK") {
           $("#progressBar").hide();
           $("#progress").hide();
-          $('#name').prop('readonly', false);
-          $('#email').prop('readonly', false);
-          $('#gdrive').prop('readonly', false);
-          $('#file').prop('disabled', false);
-          $('#submitButton').prop('disabled', false);
+          $("#name").prop("readonly", false);
+          $("#email").prop("readonly", false);
+          $("#gdrive").prop("readonly", false);
+          $("#file").prop("disabled", false);
+          $("#dataHeaders").prop("disabled", false);
+          $("#submitButton").prop("disabled", false);
           $("#success").show().html("<strong>Success! Download Link:</strong>  " + "<a href=" + e[1] + "><u>Zip File</u></a>" + " Session ID:  " + e[2]);
         } else if (e[0] === "CONTINUE") {
           progressBarUpdate(e[5] + "%", e[5] + "%" + " Complete");
-          google.script.run.withSuccessHandler(showSuccess).uploadFileToGoogleDriveContinue(e[1], e[2], e[3], e[4]);
+          google.script.run.withSuccessHandler(showSuccess).uploadFileToGoogleDriveContinue(e[1], e[2], e[3], e[4], $("#dataHeaders").prop("checked"), e[6]);
         } else {
           $("#progressBar").hide();
           $("#progress").hide();
-          $('#name').prop('readonly', false);
-          $('#email').prop('readonly', false);
-          $('#gdrive').prop('readonly', false);
-          $('#file').prop('disabled', false);          
-          $('#submitButton').prop('disabled', false);
+          $("#name").prop("readonly", false);
+          $("#email").prop("readonly", false);
+          $("#gdrive").prop("readonly", false);
+          $("#file").prop("disabled", false);
+          $("#dataHeaders").prop("disabled", false);
+          $("#submitButton").prop("disabled", false);
           showError(e);
         }
       }
@@ -185,7 +215,9 @@
       }
 
       function showError(e) {
-        $("#error").show().html("ERROR: " + e);
+        $("#error")
+          .show()
+          .html("ERROR: " + e);
       }
 
       function showProgress(e) {
@@ -196,6 +228,13 @@
         $("#progressBar").width(percentage);
         $("#progressBar").show().html(message);
       }
+
+      $("#file").on("change", function () {
+        //get the file name
+        var fileName = $(this).val();
+        //replace the "Choose a file" label
+        $(this).next(".custom-file-label").html(fileName);
+      });
     </script>
   </body>
 </html>

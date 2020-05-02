@@ -2,9 +2,10 @@ function doGet(e) {
   return HtmlService.createHtmlOutputFromFile("start.html").setTitle("CSV -> G-Drive Docs/PDF Merge");
 }
 
-function uploadFileToGoogleDrive(data, file, name, email, gDriveUrl) {
+function uploadFileToGoogleDrive(data, file, name, email, gDriveUrl, useHeadersFlag) {
   var csvTempFolderID = "1wFPsTesbQXKUUw8X6RlTibuPq7ahpjX_";
-  var sessionID = Utilities.getUuid();
+  var tempSessionID = Utilities.getUuid();
+  var sessionID = tempSessionID;
 
   try {
     //evaluate email address
@@ -49,12 +50,8 @@ function uploadFileToGoogleDrive(data, file, name, email, gDriveUrl) {
     var contentType = data.substring(5, data.indexOf(";")),
       bytes = Utilities.base64Decode(data.substr(data.indexOf("base64,") + 7)),
       blob = Utilities.newBlob(bytes, contentType, file);
-    var tempFolderID = DriveApp.getFolderById(csvTempFolderID)
-      .createFolder([name, email].join(" ") + "_" + sessionID)
-      .getId();
+    var tempFolderID = DriveApp.getFolderById(csvTempFolderID).createFolder(name + "_" + email + "_" + sessionID).getId();
     var tempFileID = DriveApp.getFolderById(tempFolderID).createFile(blob).getId();
-    //Define User Folder & File Instances
-    var tempFolder = DriveApp.getFolderById(tempFolderID);
     var tempFile = DriveApp.getFileById(tempFileID);
 
     //evaluate MIME type
@@ -78,37 +75,36 @@ function uploadFileToGoogleDrive(data, file, name, email, gDriveUrl) {
     DriveApp.getFileById(docID).makeCopy(DriveApp.getFileById(docID).getName(), DriveApp.getFolderById(tempFolderID));
 
     //Begin CSV merge
-    var csvCatcher = csvParser(tempFileID, sessionID, tempFolder, 0);
+    var csvCatcher = csvParser(tempFileID, sessionID, tempFolderID, 0, useHeadersFlag);
     if (!isNaN(csvCatcher[0])) {
-      return ["CONTINUE", csvCatcher[0], sessionID, tempFolderID, tempFileID, csvCatcher[1].toString()];
+      return ["CONTINUE", csvCatcher[0], sessionID, tempFolderID, tempFileID, csvCatcher[1].toString(), csvCatcher[2]];
     }
 
     //wrap up the resulting PDFs into Zip File and serve download link
     var zipFileID = zipPDF(tempFolderID, sessionID);
     var ZipDownloadUrl = DriveApp.getFileById(zipFileID).setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW).getDownloadUrl();
 
-    //Email Download Link
-    //MailApp.sendEmail(email, "CSV->PDF Download Link (SessionID: " + sessionID + ")", "Download Link: \r\n" + ZipDownloadUrl + "\r\n\r\n SessionID: " + sessionID);
-    
     return ["OK", ZipDownloadUrl, sessionID];
+
   } catch (f) {
     writeLog(f.toString());
     return f.toString();
   }
 }
 
-function uploadFileToGoogleDriveContinue(csvCatcher, sessionID, tempFolderID, tempFileID) {
+function uploadFileToGoogleDriveContinue(csvCatcher, sessionID, tempFolderID, tempFileID, useHeadersFlag, headers) {
   try {
     var tempFolder = DriveApp.getFolderById(tempFolderID);
 
     //Begin CSV merge
-    var csvCatcher = csvParser(tempFileID, sessionID, tempFolder, csvCatcher);
+    var csvCatcher = csvParser(tempFileID, sessionID, tempFolderID, csvCatcher, useHeadersFlag, headers);
     if (!isNaN(csvCatcher[0])) {
-      return ["CONTINUE", csvCatcher[0], sessionID, tempFolderID, tempFileID, csvCatcher[1].toString()];
+      return ["CONTINUE", csvCatcher[0], sessionID, tempFolderID, tempFileID, csvCatcher[1].toString(), csvCatcher[2]];
     }
     var zipFileID = zipPDF(tempFolderID, sessionID);
 
     return ["OK", DriveApp.getFileById(zipFileID).setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW).getDownloadUrl(), sessionID];
+
   } catch (f) {
     writeLog(f.toString());
     return f.toString();
