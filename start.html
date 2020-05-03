@@ -29,20 +29,45 @@
             <a class="nav-link" href="http://charlesvought.com" target="_blank" rel="noopener noreferrer">About.me</a>
           </li>
 
-          <!--   
-      <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          Dropdown link
-        </a>
-        <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-          <a class="dropdown-item" href="#">Action</a>
-          <a class="dropdown-item" href="#">Another action</a>
-          <a class="dropdown-item" href="#">Something else here</a>
-        </div>
-      </li>   -->
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              Tools
+            </a>
+            <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+              <a class="dropdown-item" data-toggle="modal" data-target="#recallDownloadUrl">Recall Download URL</a>
+            </div>
+          </li>
         </ul>
       </div>
     </nav>
+
+    <!-- Modal - Recall Download URL w/ SessionID -->
+    <div class="modal fade" id="recallDownloadUrl" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">Recall Download URL</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            Want to recall the download URL from a previous session?
+          </div>
+          <div class="input-group mb-3">
+            <div class="input-group-prepend">
+              <span class="input-group-text" id="inputGroup-sizing-default">Session ID</span>
+            </div>
+            <input type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-default" id="sessionPrompt" />
+          </div>
+          <div><p id="downloadUrlResponse" style="display: none;"></p></div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="clearDownloadUrl()">Close</button>
+            <button type="button" class="btn btn-primary" onclick="queryDownloadUrl()">Submit</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Alerts -->
     <!-- PROGRESS Bar -->
@@ -122,6 +147,35 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+    <!-- Firebase App (the core Firebase SDK) is always required and must be listed first -->
+    <script src="https://www.gstatic.com/firebasejs/7.14.2/firebase-app.js"></script>
+
+    <!-- If you enabled Analytics in your project, add the Firebase SDK for Analytics -->
+    <script src="https://www.gstatic.com/firebasejs/7.14.2/firebase-analytics.js"></script>
+
+    <!-- Add Firebase products that you want to use -->
+    <script src="https://www.gstatic.com/firebasejs/7.14.2/firebase-firestore.js"></script>
+    <script>
+      // Your web app's Firebase configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyDqkp8pa5wBZucWENsUyly9UXzmdzXy394",
+        authDomain: "docstopdf-26472.firebaseapp.com",
+        databaseURL: "https://docstopdf-26472.firebaseio.com",
+        projectId: "docstopdf-26472",
+        storageBucket: "docstopdf-26472.appspot.com",
+        messagingSenderId: "21314900664",
+        appId: "1:21314900664:web:9e123a3875ddd26615da4d",
+        measurementId: "G-VRW5Y0S4Y4",
+      };
+
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+      //firebase.analytics();
+      // Get a reference to the database service
+      var database = firebase.firestore();
+    </script>
+
     <script>
       var file,
         reader = new FileReader();
@@ -154,6 +208,7 @@
           $("#dataHeaders").prop("disabled", false);
           $("#submitButton").prop("disabled", false);
           $("#success").show().html("<strong>Success! Download Link:</strong>  " + "<a href=" + e[1] + "><u>Zip File</u></a>" + " Session ID:  " + e[2]);
+          writeUserSession(e[2], e[1], $("input#email").val().trim(), $("input#name").val().trim());
         } else if (e[0] === "CONTINUE") {
           progressBarUpdate(e[5] + "%", e[5] + "%" + " Complete");
           google.script.run.withSuccessHandler(showSuccess).uploadFileToGoogleDriveContinue(e[1], e[2], e[3], e[4], $("#dataHeaders").prop("checked"), e[6]);
@@ -215,13 +270,21 @@
       }
 
       function showError(e) {
-        $("#error")
-          .show()
-          .html("ERROR: " + e);
+        $("#error").show().html("ERROR: " + e);
       }
 
       function showProgress(e) {
         $("#progress").show().html(e);
+      }
+
+      function showDownloadUrl(e) {
+        $("#downloadUrlResponse").show().html(e);
+      }
+      
+      function clearDownloadUrl() {
+        $("#downloadUrlResponse").hide();
+        $("#sessionPrompt").val("");
+        console.log("Clear Download Ran!");
       }
 
       function progressBarUpdate(percentage, message) {
@@ -235,6 +298,38 @@
         //replace the "Choose a file" label
         $(this).next(".custom-file-label").html(fileName);
       });
+
+      function writeUserSession(sessionID, downloadUrl, email, name) {
+        // Add a new document in collection "cities"
+        database.collection("sessions").doc(sessionID).set({
+            name: name,
+            downloadUrl: downloadUrl,
+            email: email,
+          })
+          .then(function () {
+            console.log("Database successfully written!");
+          })
+          .catch(function (error) {
+            console.error("Error writing document: ", error);
+          });
+      }
+
+      function queryDownloadUrl() {
+        var query = database.collection("sessions").doc($("input#sessionPrompt").val().trim());
+        query.get()
+          .then(function (doc) {
+            if (doc.exists) {
+              var qResponse = doc.data();
+              showDownloadUrl("Download URL: " + "<a href=" + qResponse.downloadUrl + "><u>Zip File</u></a>");
+            } else {
+              // doc.data() will be undefined in this case
+              showDownloadUrl("Error: SessionID does not exist.");
+            }
+          })
+          .catch(function (error) {
+            showDownloadUrl("Error: Database Query Failed");
+          });
+      }
     </script>
   </body>
 </html>

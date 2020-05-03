@@ -92,7 +92,7 @@ function uploadFileToGoogleDrive(data, file, name, email, gDriveUrl, useHeadersF
   }
 }
 
-function uploadFileToGoogleDriveContinue(csvCatcher, sessionID, tempFolderID, tempFileID, useHeadersFlag, headers) {
+function uploadFileToGoogleDriveContinue(csvCatcher, sessionID, tempFolderID, tempFileID, useHeadersFlag, headers, email, name) {
   try {
     var tempFolder = DriveApp.getFolderById(tempFolderID);
 
@@ -102,8 +102,9 @@ function uploadFileToGoogleDriveContinue(csvCatcher, sessionID, tempFolderID, te
       return ["CONTINUE", csvCatcher[0], sessionID, tempFolderID, tempFileID, csvCatcher[1].toString(), csvCatcher[2]];
     }
     var zipFileID = zipPDF(tempFolderID, sessionID);
+    var ZipDownloadUrl = DriveApp.getFileById(zipFileID).setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW).getDownloadUrl();
 
-    return ["OK", DriveApp.getFileById(zipFileID).setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW).getDownloadUrl(), sessionID];
+    return ["OK", ZipDownloadUrl, sessionID];
 
   } catch (f) {
     writeLog(f.toString());
