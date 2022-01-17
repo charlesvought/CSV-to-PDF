@@ -3,7 +3,7 @@ Merge Google Docs with Data to produce PDFs.
 # Applications Links
 Production link: https://script.google.com/macros/s/AKfycbzyMM_lxBN0yNx3YmFB5iOWIJHnpG3BET70r-Ik8oPDwUAJM5k9/exec
 
-URL Forward from: [charlesvought.com/csvpdf](charlesvought.com/csvpdf)
+URL Forward from: http://charlesvought.com/csvpdf
 
 
 # Step-by-Step Guide
